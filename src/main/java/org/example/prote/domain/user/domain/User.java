@@ -1,10 +1,13 @@
 package org.example.prote.domain.user.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.example.prote.domain.emotion.domain.UserEmotion;
 
+import java.util.List;
+
+@Builder
+@AllArgsConstructor
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "users")
@@ -23,5 +26,8 @@ public class User {
     private String profile_image;
 
     @Column(nullable = false, unique = true)
-    private String emaill;
+    private String email;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserEmotion> userEmotions;
 }
