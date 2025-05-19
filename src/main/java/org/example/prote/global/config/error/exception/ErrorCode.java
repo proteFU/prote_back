@@ -12,7 +12,9 @@ public enum ErrorCode {
     EXPIRED_JWT(401, "Expired Jwt"),
     INVALID_JWT(401, "Invalid Jwt"),
     PROVIDER_NOT_SUPPORTED(400, "Provider Not Supported"),
-    INTERNAL_SERVER_ERROR(500, "Internal Server Error");
+    INTERNAL_SERVER_ERROR(500, "Internal Server Error"),
+    INVALID_PASSWORD(400, "Invalid Password"),
+    USER_ALREADY_EXISTS(409, "User Already Exists");
 
     private final int status;
     private final String message;
