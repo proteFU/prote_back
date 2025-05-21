@@ -1,15 +1,24 @@
 package org.example.prote.domain.emotion.domain;
 
-import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Map;
+
+@Getter
 @NoArgsConstructor
-@Table(name = "emotions")
-@Entity
+@AllArgsConstructor
+@Builder
+@Document(collection = "user_emotions")
 public class Emotion {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Id
+    private String id;
 
-    @Column(nullable = false, length = 20)
-    private String emotion;
+    private Long userId;
+
+    private Map<String, Integer> emotions;
 }

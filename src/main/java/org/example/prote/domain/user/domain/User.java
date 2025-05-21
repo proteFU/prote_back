@@ -2,9 +2,7 @@ package org.example.prote.domain.user.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.example.prote.domain.emotion.domain.UserEmotion;
-
-import java.util.List;
+import org.example.prote.domain.user.domain.type.Role;
 
 @Builder
 @AllArgsConstructor
@@ -28,6 +26,6 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserEmotion> userEmotions;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 }

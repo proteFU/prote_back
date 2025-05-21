@@ -2,50 +2,44 @@ package org.example.prote.domain.user.presentation.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.prote.domain.user.exception.UserNotFoundException;
 import org.example.prote.domain.user.presentation.dto.UserLogInRequestDto;
 import org.example.prote.domain.user.presentation.dto.UserResponseDto;
 import org.example.prote.domain.user.presentation.dto.UserSignUpRequestDto;
 import org.example.prote.domain.user.service.UserService;
-import org.example.prote.global.security.oauth.CustomOAuth2User;
-import org.springframework.http.ResponseEntity;
+import org.example.prote.global.security.auth.AuthDetails;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
+@RequestMapping("/users")
 public class UserController {
     private final UserService userService;
     @PostMapping("/sign-up")
-    public ResponseEntity<Void> singUp(@RequestBody UserSignUpRequestDto request, HttpServletResponse response) {
+    public void singUp(@RequestBody UserSignUpRequestDto request, HttpServletResponse response) {
         userService.signUp(request, response);
-
-        return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/log-out")
-    public ResponseEntity<Void> logOut(@AuthenticationPrincipal CustomOAuth2User customOAuth2User, HttpServletResponse response) {
-        userService.logOut(customOAuth2User, response);
-
-        return ResponseEntity.ok().build();
+    @PostMapping("/logout")
+    public void logOut(@AuthenticationPrincipal AuthDetails request, HttpServletResponse response) {
+        userService.logOut(request, response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(UserLogInRequestDto request, HttpServletResponse response) {
-        userService.logIn(request, response);
+    public void login(@RequestBody UserLogInRequestDto request, HttpServletResponse response) {
 
-        return ResponseEntity.ok().build();
+        userService.logIn(request, response);
     }
 
     @GetMapping("/profile")
-    public UserResponseDto getCurrentUser(@AuthenticationPrincipal CustomOAuth2User customOAuth2User) {
-        if (customOAuth2User == null){
+    public UserResponseDto getCurrentUser(@AuthenticationPrincipal AuthDetails request) {
+        if (request == null){
             throw UserNotFoundException.EXCEPTION;
         } else {
-            return userService.getUser(customOAuth2User);
+            return userService.getUser(request);
         }
     }
 }

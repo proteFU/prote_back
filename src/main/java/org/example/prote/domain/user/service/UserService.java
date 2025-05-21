@@ -1,6 +1,7 @@
 package org.example.prote.domain.user.service;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.prote.domain.user.domain.User;
 import org.example.prote.domain.user.domain.repository.UserRepository;
@@ -10,8 +11,8 @@ import org.example.prote.domain.user.exception.UserNotFoundException;
 import org.example.prote.domain.user.presentation.dto.UserLogInRequestDto;
 import org.example.prote.domain.user.presentation.dto.UserResponseDto;
 import org.example.prote.domain.user.presentation.dto.UserSignUpRequestDto;
-import org.example.prote.global.security.oauth.CustomOAuth2User;
-import org.example.prote.global.util.JwtUtil;
+import org.example.prote.global.security.auth.AuthDetails;
+import org.example.prote.global.security.jwt.JwtTokenProvider;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,9 +22,10 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
 
+    @Transactional
     public void signUp(UserSignUpRequestDto request, HttpServletResponse response){
         if (userRepository.findByEmail(request.email()).isPresent()) {
             throw UserAlreadyExistsException.EXCEPTION;
@@ -38,28 +40,31 @@ public class UserService {
 
         userRepository.save(user);
 
-        jwtUtil.addCookies(user.getEmail(), response);
+        redisTemplate.delete(request.email());
+
+        jwtTokenProvider.createTokens(request.email(), response);
     }
 
-    public void logOut(CustomOAuth2User customOAuth2User, HttpServletResponse response) {
-        jwtUtil.deleteCookies(response);
-
-        redisTemplate.delete(customOAuth2User.getName());
+    public void logOut(AuthDetails request, HttpServletResponse response) {
+        redisTemplate.delete(request.getUsername());
+        jwtTokenProvider.deleteTokens(response);
     }
 
+    @Transactional
     public void logIn(UserLogInRequestDto request, HttpServletResponse response) {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> UserNotFoundException.EXCEPTION);
 
         if(passwordEncoder.matches(request.password(), user.getPassword())){
-            jwtUtil.addCookies(user.getEmail(), response);
+            redisTemplate.delete(request.email());
+            jwtTokenProvider.createTokens(user.getEmail(), response);
         } else {
             throw InvalidPasswordException.EXCEPTION;
         }
     }
 
-    public UserResponseDto getUser(CustomOAuth2User customOAuth2User) {
-        User user = userRepository.findByEmail(customOAuth2User.getName())
+    public UserResponseDto getUser(AuthDetails request) {
+        User user = userRepository.findByEmail(request.getUsername())
                 .orElseThrow(() -> UserNotFoundException.EXCEPTION);
 
         UserResponseDto userResponseDto = new UserResponseDto(

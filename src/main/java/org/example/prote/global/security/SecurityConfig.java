@@ -2,8 +2,6 @@ package org.example.prote.global.security;
 
 import lombok.RequiredArgsConstructor;
 import org.example.prote.global.security.jwt.JwtTokenFilter;
-import org.example.prote.global.security.jwt.JwtTokenProvider;
-import org.example.prote.global.security.oauth.OAuth2LoginSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,14 +17,17 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @EnableWebSecurity
 @RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
-    private final JwtTokenProvider jwtTokenProvider;
-    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-
+    private final JwtTokenFilter jwtTokenFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
@@ -41,26 +42,40 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
+        http.cors(cors -> cors
+                .configurationSource(corsConfigurationSource()
+        ));
+
         http
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/auth").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/users/**").permitAll()
+                        .requestMatchers("emotions/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()
                 );
 
-        http
-                .oauth2Login(
-                        oauth2 -> oauth2.successHandler(oAuth2LoginSuccessHandler)
-                );
-
         http.addFilterBefore(
-                new JwtTokenFilter(jwtTokenProvider),
+                jwtTokenFilter,
                 UsernamePasswordAuthenticationFilter.class
         );
 
         return http.build();
     }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {

@@ -1,6 +1,5 @@
 package org.example.prote.global.security.auth;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.example.prote.domain.user.domain.User;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,10 +9,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 
-@Getter
 @RequiredArgsConstructor
 public class AuthDetails implements UserDetails {
-
     private final User user;
 
     @Override
@@ -29,6 +26,10 @@ public class AuthDetails implements UserDetails {
     @Override
     public String getUsername() {
         return user.getEmail();
+    }
+
+    public Long getUserId(){
+        return user.getId();
     }
 
     @Override
