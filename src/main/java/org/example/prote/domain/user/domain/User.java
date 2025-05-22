@@ -2,7 +2,7 @@ package org.example.prote.domain.user.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.example.prote.domain.user.domain.type.Role;
+import org.example.prote.domain.user.type.Role;
 
 @Builder
 @AllArgsConstructor

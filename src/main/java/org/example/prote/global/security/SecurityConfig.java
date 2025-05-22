@@ -51,6 +51,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/users/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/users/**").permitAll()
+                        .requestMatchers("/songs/likes/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/songs").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("emotions/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()
                 );
