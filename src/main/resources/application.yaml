@@ -4,7 +4,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://localhost:27017/mydb
+      uri: ${MONGO_URL}
 
 
   datasource:
@@ -15,7 +15,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
 
 jwt:
   access-time: ${ACCESS_TIME}
