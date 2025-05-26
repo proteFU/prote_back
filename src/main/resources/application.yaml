@@ -9,17 +9,17 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${db-url}
-    username: ${db-user}
-    password: ${db-password}
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
 
 jwt:
-  access-time: ${access-time}
-  refresh-time: ${refresh-time}
-  prefix: ${prefix}
-  header: ${header}
-  secret-key: ${secret-key}
+  access-time: ${ACCESS_TIME}
+  refresh-time: ${REFRESH_TIME}
+  prefix: ${PREFIX}
+  header: ${HEADER}
+  secret-key: ${SECRET_KEY}

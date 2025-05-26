@@ -10,7 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.prote.domain.user.domain.type.Role;
+import org.example.prote.domain.user.type.Role;
 import org.example.prote.global.config.properties.JwtProperties;
 import org.example.prote.global.security.auth.AuthDetailsService;
 import org.example.prote.global.security.jwt.exception.ExpiredJwtTokenException;

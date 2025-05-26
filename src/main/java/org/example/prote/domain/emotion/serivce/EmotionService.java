@@ -2,11 +2,12 @@ package org.example.prote.domain.emotion.serivce;
 
 import lombok.RequiredArgsConstructor;
 import org.example.prote.domain.emotion.domain.Emotion;
-import org.example.prote.domain.emotion.domain.repository.EmotionRepository;
-import org.example.prote.domain.emotion.presentation.dto.EmotionAddRequestDto;
-import org.example.prote.domain.emotion.presentation.dto.EmotionResponseDto;
+import org.example.prote.domain.emotion.dto.EmotionAddRequestDto;
+import org.example.prote.domain.emotion.dto.EmotionResponseDto;
+import org.example.prote.domain.emotion.repository.EmotionRepository;
 import org.example.prote.global.security.auth.AuthDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.Map;
 public class EmotionService {
     private final EmotionRepository emotionRepository;
 
+    @Transactional
     public void addEmotion(AuthDetails request, EmotionAddRequestDto requestDto) {
         Long userId = request.getUserId();
 
