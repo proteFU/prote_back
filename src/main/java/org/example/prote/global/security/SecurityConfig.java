@@ -54,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers("/songs/likes/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/songs").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("emotions/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/v3/api-docs/**",   "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()
                 );
 
