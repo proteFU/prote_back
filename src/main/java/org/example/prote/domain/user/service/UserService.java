@@ -7,15 +7,17 @@ import org.example.prote.domain.user.domain.User;
 import org.example.prote.domain.user.dto.UserLogInRequestDto;
 import org.example.prote.domain.user.dto.UserResponseDto;
 import org.example.prote.domain.user.dto.UserSignUpRequestDto;
-import org.example.prote.domain.user.exception.InvalidPasswordException;
-import org.example.prote.domain.user.exception.UserAlreadyExistsException;
-import org.example.prote.domain.user.exception.UserNotFoundException;
 import org.example.prote.domain.user.repository.UserRepository;
+import org.example.prote.domain.user.type.Role;
 import org.example.prote.global.security.auth.AuthDetails;
 import org.example.prote.global.security.jwt.JwtTokenProvider;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -26,9 +28,9 @@ public class UserService {
     private final RedisTemplate<String, String> redisTemplate;
 
     @Transactional
-    public void signUp(UserSignUpRequestDto request, HttpServletResponse response){
+    public ResponseEntity<Void> signUp(UserSignUpRequestDto request, HttpServletResponse response){
         if (userRepository.findByEmail(request.email()).isPresent()) {
-            throw UserAlreadyExistsException.EXCEPTION;
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
         User user = User.builder()
@@ -36,43 +38,52 @@ public class UserService {
                 .username(request.username())
                 .password(passwordEncoder.encode(request.password()))
                 .profile_image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSuqRPBOeet4nYclhDLrDZwF2w2kBObHgLVdg&s")
+                .role(Role.ROLE_USER)
                 .build();
 
         userRepository.save(user);
 
-        redisTemplate.delete(request.email());
-
-        jwtTokenProvider.createTokens(request.email(), response);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    public void logOut(AuthDetails request, HttpServletResponse response) {
+    public ResponseEntity<Void> logOut(AuthDetails request, HttpServletResponse response) {
         redisTemplate.delete(request.getUsername());
         jwtTokenProvider.deleteTokens(response);
+
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @Transactional
-    public void logIn(UserLogInRequestDto request, HttpServletResponse response) {
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> UserNotFoundException.EXCEPTION);
+    public ResponseEntity<Void> logIn(UserLogInRequestDto request, HttpServletResponse response) {
+        Optional<User> user = userRepository.findByEmail(request.email());
 
-        if(passwordEncoder.matches(request.password(), user.getPassword())){
-            redisTemplate.delete(request.email());
-            jwtTokenProvider.createTokens(user.getEmail(), response);
+        if(user.isPresent()) {
+            if (passwordEncoder.matches(request.password(), user.get().getPassword())) {
+                redisTemplate.delete(request.email());
+                jwtTokenProvider.createTokens(user.get().getEmail(), response);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
         } else {
-            throw InvalidPasswordException.EXCEPTION;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+
+        return ResponseEntity.ok().build();
     }
 
-    public UserResponseDto getUser(AuthDetails request) {
-        User user = userRepository.findByEmail(request.getUsername())
-                .orElseThrow(() -> UserNotFoundException.EXCEPTION);
+    public ResponseEntity<UserResponseDto> getUser(AuthDetails request) {
+        Optional<User> user = userRepository.findByEmail(request.getUsername());
 
-        UserResponseDto userResponseDto = new UserResponseDto(
-                user.getUsername(),
-                user.getEmail(),
-                user.getProfile_image()
-        );
+        if(user.isPresent()) {
+            UserResponseDto userResponseDto = new UserResponseDto(
+                    user.get().getUsername(),
+                    user.get().getEmail(),
+                    user.get().getProfile_image()
+            );
 
-        return userResponseDto;
+            return ResponseEntity.ok(userResponseDto);
+        }
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 }
