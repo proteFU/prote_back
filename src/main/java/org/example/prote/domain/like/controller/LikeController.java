@@ -1,5 +1,6 @@
 package org.example.prote.domain.like.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.example.prote.domain.like.dto.LikeAddRequestDto;
 import org.example.prote.domain.like.dto.LikeListResponseDto;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@SecurityRequirement(name = "BearerAuth")
 @RequestMapping("songs/likes")
 @RequiredArgsConstructor
 @RestController
