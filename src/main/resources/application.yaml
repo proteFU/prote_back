@@ -5,7 +5,8 @@ spring:
   data:
     mongodb:
       uri: ${MONGO_URL}
-
+    redis:
+      url: ${REDIS_URL}
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -23,3 +24,15 @@ jwt:
   prefix: ${PREFIX}
   header: ${HEADER}
   secret-key: ${SECRET_KEY}
+
+server:
+  ssl:
+    enabled: false
+  forward-headers-strategy: native
+  tomcat:
+    redirect-context-root: false
+    use-relative-redirects: true
+
+springdoc:
+  swagger-ui:
+    url: https://lazy-shaylah-guhyunwoo-777b581b.koyeb.app/v3/api-docs
