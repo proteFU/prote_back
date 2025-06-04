@@ -24,21 +24,21 @@ public class SongController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/lrc")
-    public LrcResponse convertToLrc(@RequestBody LrcRequest req) {
-        String[] lines = req.lyrics.split("\\r?\\n");
-        StringBuilder sb = new StringBuilder();
-
-        int intervalSec = 5; // 5초 간격으로 타임스탬프 생성
-
-        for (int i = 0; i < lines.length; i++) {
-            int totalSeconds = i * intervalSec;
-            int min = totalSeconds / 60;
-            int sec = totalSeconds % 60;
-            String timeTag = String.format("[%02d:%02d.00]", min, sec);
-            sb.append(timeTag).append(lines[i].trim()).append("\n");
-        }
-
-        return new LrcResponse(sb.toString());
-    }
+//    @PostMapping("/lrc")
+//    public LrcResponse convertToLrc(@RequestBody LrcRequest req) {
+//        String[] lines = req.lyrics.split("\\r?\\n");
+//        StringBuilder sb = new StringBuilder();
+//
+//        int intervalSec = 5; // 5초 간격으로 타임스탬프 생성
+//
+//        for (int i = 0; i < lines.length; i++) {
+//            int totalSeconds = i * intervalSec;
+//            int min = totalSeconds / 60;
+//            int sec = totalSeconds % 60;
+//            String timeTag = String.format("[%02d:%02d.00]", min, sec);
+//            sb.append(timeTag).append(lines[i].trim()).append("\n");
+//        }
+//
+//        return new LrcResponse(sb.toString());
+//    }
 }

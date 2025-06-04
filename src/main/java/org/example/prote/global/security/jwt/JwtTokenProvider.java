@@ -16,12 +16,14 @@ import org.example.prote.global.security.auth.AuthDetailsService;
 import org.example.prote.global.security.jwt.exception.ExpiredJwtTokenException;
 import org.example.prote.global.security.jwt.exception.InvalidJwtTokenException;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -42,20 +44,20 @@ public class JwtTokenProvider {
     }
 
     private void addCookies(String accessToken, String refreshToken, HttpServletResponse response) {
-        Cookie accessCookie = createCookie(REFRESH_KEY, accessToken, (int) (jwtProperties.getAccessTime() / 1000));
-        Cookie refreshCookie = createCookie(ACCESS_KEY, refreshToken, (int) (jwtProperties.getRefreshTime() / 1000));
-
-        response.addCookie(accessCookie);
-        response.addCookie(refreshCookie);
+        createCookie(response, ACCESS_KEY, accessToken, (int) (jwtProperties.getAccessTime() / 1000));
+        createCookie(response, REFRESH_KEY, refreshToken, (int) (jwtProperties.getRefreshTime() / 1000));
     }
 
-    private Cookie createCookie(String name, String value, int maxAge) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(maxAge);
-        return cookie;
+    private void createCookie(HttpServletResponse response, String name, String value, int maxAge) {
+        ResponseCookie cookie = ResponseCookie.from(name, value)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(maxAge)
+                .sameSite("None")
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
     }
 
     public String createAccessToken(String email) {
@@ -75,33 +77,32 @@ public class JwtTokenProvider {
 
     private String createToken(String email, String type, Long time) {
         Date now = new Date();
-        SecretKey key = Keys.hmacShaKeyFor(jwtProperties.getSecretKey().getBytes());
+        SecretKey key = Keys.hmacShaKeyFor(
+                Base64.getDecoder().decode(jwtProperties.getSecretKey())
+        );
 
         return Jwts.builder()
                 .signWith(key)
                 .header()
-                    .add("alg", "HS256")
                     .add("typ", "JWT")
                     .and()
                 .claim("sub", email)
-                .claim("role", Role.ROLE_ADMIN)
+                .claim("role", Role.ROLE_USER.name())
+                .claim("type", type)
                 .claim("iat", now)
                 .claim("exp", new Date(now.getTime() + time))
                 .compact();
     }
 
-    public void deleteTokens(HttpServletResponse response) {
-        addCookies("", "", response);
-    }
+    public void deleteTokens(HttpServletResponse response) { addCookies("", "", response); }
 
     public String resolveToken(HttpServletRequest request) {
-        String bearer = request.getHeader(jwtProperties.getHeader());
-        return parseToken(bearer);
-    }
+        if (request.getCookies() == null) return null;
 
-    public String parseToken(String bearerToken) {
-        if (bearerToken != null && bearerToken.startsWith(jwtProperties.getPrefix())) {
-            return bearerToken.substring(jwtProperties.getPrefix().length() + 1);
+        for (Cookie cookie : request.getCookies()) {
+            if ("access_token".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
         }
         return null;
     }
@@ -117,10 +118,13 @@ public class JwtTokenProvider {
 
     private Claims getTokenBody(String token) {
         try {
-            SecretKey key = Keys.hmacShaKeyFor(jwtProperties.getSecretKey().getBytes());
+            SecretKey key = Keys.hmacShaKeyFor(
+                    Base64.getDecoder().decode(jwtProperties.getSecretKey())
+            );
 
             return Jwts.parser()
-                    .verifyWith(key).build()
+                    .verifyWith(key)
+                    .build()
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (ExpiredJwtException e) {

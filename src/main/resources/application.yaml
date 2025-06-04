@@ -21,7 +21,6 @@ spring:
 jwt:
   access-time: ${ACCESS_TIME}
   refresh-time: ${REFRESH_TIME}
-  prefix: ${PREFIX}
   header: ${HEADER}
   secret-key: ${SECRET_KEY}
 
@@ -36,3 +35,7 @@ server:
 springdoc:
   swagger-ui:
     url: https://lazy-shaylah-guhyunwoo-777b581b.koyeb.app/v3/api-docs
+
+logging:
+  level:
+    org.springframework.web: debug
